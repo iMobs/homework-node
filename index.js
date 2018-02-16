@@ -2,10 +2,13 @@
 
 const axios = require('axios');
 const cheerio = require('cheerio');
+const del = require('del');
 const download = require('download');
 const Promise = require('bluebird');
 
 module.exports = async (count, callback) => {
+  await del('./packages/*');
+
   const packages = await getPackageList(count);
 
   await Promise.map(packages, downloadPackage);
