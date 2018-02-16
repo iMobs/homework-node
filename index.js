@@ -1,33 +1,49 @@
 'use strict'
 
 const axios = require('axios');
+const cheerio = require('cheerio');
 const download = require('download');
 const Promise = require('bluebird');
 
-// Hard Code the packages for now
-const packages = [
-  'lodash',
-  'request',
-  'chalk',
-  'async',
-  'express',
-  'bluebird',
-  'react',
-  'commander',
-  'debug',
-  'moment'
-]
+module.exports = async (count, callback) => {
+  const packages = await getPackageList(count);
 
-module.exports = downloadPackages;
-
-async function downloadPackages (count, callback) {
   await Promise.map(packages, downloadPackage);
 
   // Finally invoke the callback to signal we're done
   if (typeof callback === 'function') {
     callback();
   }
-}
+};
+
+const getPackageList = async (count) => {
+  const packages = [];
+
+  while (packages.length < count) {
+    // Get the most-depended-upon page
+    const { data } = await axios.get('https://www.npmjs.com/browse/depended', {
+      params: {
+        offset: packages.length,
+      },
+    });
+
+    // Load it into the parser
+    const $ = cheerio.load(data);
+
+    // Select all package detail names (easiest place to find what we want)
+    $('.package-details a.name').each(function() {
+      // Push package name into list
+      packages.push($(this).text());
+
+      // Bail out if target count is reached
+      if (packages.length === count) {
+        return false;
+      }
+    });
+  }
+
+  return packages;
+};
 
 const downloadPackage = async (packageName) => {
   const { data } = await axios.get(`https://registry.npmjs.com/${packageName}`);
