@@ -5,6 +5,7 @@ const cheerio = require('cheerio');
 const del = require('del');
 const download = require('download');
 const Promise = require('bluebird');
+const fs = require('fs-extra');
 
 module.exports = async (count, callback) => {
   await del('./packages/*');
@@ -56,8 +57,20 @@ const downloadPackage = async (packageName) => {
   const latestVersion = data.versions[version];
   
   const { tarball } = latestVersion.dist;
+
+  const packagePath = `./packages/${packageName}`;
   
-  await download(tarball, `./packages/${packageName}`, {
+  await download(tarball, packagePath, {
     extract: true,
   });
+
+  // Gotta move the contents of $packageName/package up
+  await Promise.map(fs.readdir(`${packagePath}/package`), file => {
+    const oldPath = `${packagePath}/package/${file}`;
+    const newPath = `${packagePath}/${file}`;
+
+    return fs.move(oldPath, newPath);
+  });
+
+  await fs.remove(`${packagePath}/package`);
 };
