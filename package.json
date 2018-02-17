@@ -4,7 +4,6 @@
   },
   "dependencies": {
     "axios": "^0.17.1",
-    "bluebird": "^3.5.1",
     "cheerio": "^1.0.0-rc.2",
     "del": "^3.0.0",
     "download": "^6.2.5",
