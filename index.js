@@ -9,11 +9,10 @@ const fs = require('fs-extra');
 module.exports = async (count, callback) => {
   try {
     await del('./packages/*');
-  
+
     const packages = await getPackageList(count);
-  
     await Promise.all(packages.map(downloadPackage));
-  
+
     // Finally invoke the callback to signal we're done
     if (typeof callback === 'function') {
       callback();
@@ -52,22 +51,18 @@ const getPackageList = async (count) => {
   return packages;
 };
 
-const downloadPackage = async (packageName) => {
-  const { data } = await axios.get(`https://registry.npmjs.com/${packageName}`);
-
-  const version = data['dist-tags'].latest;
-  
-  const latestVersion = data.versions[version];
-  
+const downloadPackage = async packageName => {
+  const { data: pacakageData } = await axios.get(`https://registry.npmjs.com/${packageName}`);
+  const version = packageData['dist-tags'].latest;
+  const latestVersion = packageData.versions[version];
   const { tarball } = latestVersion.dist;
-
   const packagePath = `./packages/${packageName}`;
-  
+
   await download(tarball, packagePath, {
     extract: true,
   });
 
-  // Gotta move the contents of $packageName/package up
+  // Move the contents of $packageName/package up
   const contents = await fs.readdir(`${packagePath}/package`);
 
   await Promise.all(contents.map(file => {
@@ -77,5 +72,6 @@ const downloadPackage = async (packageName) => {
     return fs.move(oldPath, newPath);
   }));
 
+  // Clean up the now empty directory
   fs.remove(`${packagePath}/package`);
 };
