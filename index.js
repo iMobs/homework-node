@@ -65,16 +65,21 @@ const downloadPackage = async packageName => {
     extract: true,
   });
 
-  // Move the contents of $packageName/package up
-  const contents = await fs.readdir(`${packagePath}/package`);
+  /* All of the tarballs can be assumed to have a single root directory.
+   * This will usually just be a folder called package.
+   * Ejs seems to be the exception, which is why this needs to be read.
+   */
+  const [ subdir ] = await fs.readdir(packagePath);
+  const contents = await fs.readdir(`${packagePath}/${subdir}`);
 
+  // Move all of the package contents up a directory level
   await Promise.all(contents.map(file => {
-    const oldPath = `${packagePath}/package/${file}`;
+    const oldPath = `${packagePath}/${subdir}/${file}`;
     const newPath = `${packagePath}/${file}`;
 
     return fs.move(oldPath, newPath);
   }));
 
   // Clean up the now empty directory
-  fs.remove(`${packagePath}/package`);
+  fs.remove(`${packagePath}/${subdir}`);
 };
