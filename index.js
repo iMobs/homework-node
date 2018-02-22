@@ -65,7 +65,7 @@ const downloadPackage = async packageName => {
   const version = packageData['dist-tags'].latest;
   const latestVersion = packageData.versions[version];
   const { tarball } = latestVersion.dist;
-  const packagePath = `./packages/${packageName}`;
+  const packagePath = `./packages/${packageName.replace(/\//g, '-')}`;
 
   // Download the tarball and automatically extract it at `packagePath`
   await download(tarball, packagePath, {
