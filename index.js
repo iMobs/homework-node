@@ -52,7 +52,10 @@ const getPackageList = async (count) => {
 };
 
 const downloadPackage = async packageName => {
-  const { data: pacakageData } = await axios.get(`https://registry.npmjs.com/${packageName}`);
+  const { data: packageData } = await axios.get(
+    // Slashes must be escaped
+    `https://registry.npmjs.com/${packageName.replace(/\//g, '%2F')}`
+  );
   const version = packageData['dist-tags'].latest;
   const latestVersion = packageData.versions[version];
   const { tarball } = latestVersion.dist;
